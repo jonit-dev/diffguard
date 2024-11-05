@@ -1,6 +1,46 @@
-# OpenRouter PR Review Action
+# OpenRouter GitHub Action
 
-This GitHub Action integrates with OpenRouter to review pull request diffs, suggest improvements, and scan for vulnerabilities using AI models of your choice.
+AI-powered PR reviews using OpenRouter's language models. Get automated code reviews, suggestions, and vulnerability scanning on your pull requests.
+
+## ⚠️ Security First: Managing Secrets
+
+This action requires an OpenRouter API key. **NEVER** commit API keys or sensitive data directly in your workflow files.
+
+### Setting up Secrets
+
+1. Get your OpenRouter API key from [OpenRouter](https://openrouter.ai/keys)
+2. Add it to GitHub Secrets:
+   - Go to your repository's Settings
+   - Navigate to Secrets and variables → Actions
+   - Click "New repository secret"
+   - Create a secret named `OPEN_ROUTER_KEY`
+   - Paste your OpenRouter API key as the value
+
+The `GITHUB_TOKEN` is automatically provided by GitHub Actions - you don't need to set it up manually.
+
+## Quick Start
+
+Create `.github/workflows/pr-review.yml` in your project:
+
+```yaml
+name: PR Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: AI PR Review
+        uses: jonit-dev/openrouter-github-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided
+          open_router_key: ${{ secrets.OPEN_ROUTER_KEY }} # Must be set in repository secrets
+          model_id: 'anthropic/claude-2'
+```
 
 ## Features
 
@@ -11,139 +51,73 @@ This GitHub Action integrates with OpenRouter to review pull request diffs, sugg
 - Custom prompts for specialized analysis
 - Performance and security insights
 
-## Inputs
+## Configuration Options
 
-| Input             | Description                                | Required | Default                    |
-| ----------------- | ------------------------------------------ | -------- | -------------------------- |
-| `github_token`    | GitHub token for API access                | Yes      | `${{ github.token }}`      |
-| `open_router_key` | Your OpenRouter API key                    | Yes      | -                          |
-| `model_id`        | Model ID to use (e.g., anthropic/claude-2) | Yes      | anthropic/claude-2         |
-| `custom_prompt`   | Custom prompt for specialized analysis     | No       | Default code review prompt |
-| `max_tokens`      | Maximum tokens in response                 | No       | 2048                       |
+| Input             | Description                 | Required | Default               | Security Note                            |
+| ----------------- | --------------------------- | -------- | --------------------- | ---------------------------------------- |
+| `github_token`    | GitHub token for API access | Yes      | `${{ github.token }}` | Automatically provided by GitHub Actions |
+| `open_router_key` | Your OpenRouter API key     | Yes      | -                     | Must be stored in GitHub Secrets         |
+| `model_id`        | Model ID to use             | Yes      | anthropic/claude-2    | Safe to include in workflow file         |
+| `custom_prompt`   | Custom prompt for analysis  | No       | Default prompt        | Safe to include in workflow file         |
+| `max_tokens`      | Maximum tokens in response  | No       | 2048                  | Safe to include in workflow file         |
 
-## Usage
+## Advanced Usage
 
-1. Create a new workflow file (e.g., `.github/workflows/pr-review.yml`):
-
-```yaml
-name: PR Review
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: OpenRouter PR Review
-        uses: your-username/openrouter-pr-review@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
-          model_id: 'anthropic/claude-2'
-```
-
-### Custom Prompt Example
-
-You can customize the analysis by providing your own prompt:
+### Custom Model
 
 ```yaml
-- name: OpenRouter PR Review
-  uses: your-username/openrouter-pr-review@v1
+- uses: jonit-dev/openrouter-github-action@main
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
     open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
-    model_id: 'openai/gpt-4'
-    custom_prompt: |
-      You are a security-focused code reviewer. Please analyze this code diff with emphasis on:
-      1. Security vulnerabilities
-      2. Authentication/authorization issues
-      3. Data validation
-      4. Input sanitization
-      5. Secure coding practices
+    model_id: 'openai/gpt-4' # Safe to customize
 ```
 
-## Publishing and Testing Guide
+### Custom Prompt
 
-### Local Testing
+```yaml
+- uses: jonit-dev/openrouter-github-action@main
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
+    model_id: 'anthropic/claude-2'
+    custom_prompt: |
+      You are a security-focused reviewer. Analyze this PR with emphasis on:
+      1. Security vulnerabilities
+      2. Authentication issues
+      3. Data validation
+      4. Input sanitization
+      5. Best practices
+```
 
-1. Clone this repository
-2. Create a new branch for testing:
-   ```bash
-   git checkout -b test-action
-   ```
-3. Make some changes to test
-4. Create a pull request
-5. Add your OpenRouter API key to repository secrets as `OPEN_ROUTER_KEY`
-6. The action will automatically run on your PR
-
-### Publishing to GitHub Marketplace
-
-1. Push your code to GitHub:
-
-   ```bash
-   git add .
-   git commit -m "Initial release"
-   git push origin main
-   ```
-
-2. Create a new release:
-
-   - Go to your repository on GitHub
-   - Click "Releases"
-   - Click "Create a new release"
-   - Choose a tag (e.g., "v1.0.0")
-   - Title the release (e.g., "Initial Release")
-   - Publish the release
-
-3. Update in Other Repositories:
-   ```yaml
-   - uses: your-username/openrouter-pr-review@v1
-   ```
-   Replace `your-username` with your GitHub username
-
-### Testing in Other Repositories
-
-1. Add the action to your repository's workflow:
-
-   ```yaml
-   name: PR Review
-   on:
-     pull_request:
-       types: [opened, synchronize]
-
-   jobs:
-     review:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v3
-         - uses: your-username/openrouter-pr-review@v1
-           with:
-             github_token: ${{ secrets.GITHUB_TOKEN }}
-             open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
-             model_id: 'anthropic/claude-2'
-   ```
-
-2. Add your OpenRouter API key:
-
-   - Go to repository Settings
-   - Select Secrets and variables → Actions
-   - Create a new secret named `OPEN_ROUTER_KEY`
-   - Add your OpenRouter API key as the value
-
-3. Create a test PR to verify the action works
-
-## Models
+## Available Models
 
 Some recommended models:
 
 - `anthropic/claude-2`: Excellent for detailed code analysis
 - `openai/gpt-4`: Strong general-purpose code review
 - `anthropic/claude-instant-v1`: Faster, more economical option
+
+## Testing Locally
+
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Create a test branch: `git checkout -b test-feature`
+4. Make some changes
+5. Create a PR
+6. **Important**: Add your OpenRouter API key to repository secrets as `OPEN_ROUTER_KEY`
+   - Never commit the API key directly
+   - Never include it in environment files
+   - Always use GitHub Secrets
+7. The action will run automatically on your PR
+
+## Security Best Practices
+
+1. Always use GitHub Secrets for sensitive data
+2. Never commit API keys or tokens
+3. Don't log sensitive information in PR comments
+4. Regularly rotate your OpenRouter API key
+5. Use the minimum required permissions for the GitHub token
 
 ## License
 
