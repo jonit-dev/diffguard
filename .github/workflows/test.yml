@@ -1,0 +1,18 @@
+name: Test PR Review Action
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  test-pr-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test OpenRouter PR Review
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
+          model_id: 'anthropic/claude-2'

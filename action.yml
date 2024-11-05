@@ -1,0 +1,27 @@
+name: 'OpenRouter PR Review Action'
+description: 'A GitHub Action to review PR diffs, suggest improvements, and scan for vulnerabilities using OpenRouter.'
+inputs:
+  github_token:
+    description: 'GitHub token for API access'
+    required: true
+    default: '${{ github.token }}'
+  open_router_key:
+    description: 'Your OpenRouter API key'
+    required: true
+  model_id:
+    description: 'The model ID to use for analysis (e.g., anthropic/claude-2, openai/gpt-4)'
+    required: true
+    default: 'anthropic/claude-2'
+  custom_prompt:
+    description: 'Custom prompt for the AI analysis. If not provided, a default prompt focusing on code review aspects will be used.'
+    required: false
+  max_tokens:
+    description: 'Maximum number of tokens in the response'
+    required: false
+    default: '2048'
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
+branding:
+  icon: 'eye'
+  color: 'blue'
