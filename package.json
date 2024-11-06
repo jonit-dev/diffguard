@@ -2,10 +2,10 @@
   "name": "openrouter-pr-review-action",
   "version": "1.0.0",
   "description": "GitHub Action for PR review using OpenRouter AI models",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src/index.js -o dist",
-    "test": "jest"
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",

@@ -41626,28 +41626,48 @@ const github = __nccwpck_require__(5438);
 const axios = __nccwpck_require__(8757);
 
 async function getPRDiff(octokit, context) {
-  const { data: diff } = await octokit.rest.pulls.get({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    pull_number: context.payload.pull_request.number,
-    mediaType: {
-      format: 'diff',
-    },
-  });
-  return diff;
+  try {
+    const { data: pullRequest } = await octokit.rest.pulls.get({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      pull_number: context.payload.pull_request.number,
+      mediaType: {
+        format: 'diff',
+      },
+    });
+
+    return pullRequest;
+  } catch (error) {
+    throw new Error(`Failed to fetch PR diff: ${error.message}`);
+  }
 }
 
 async function analyzeDiff(diff, modelId, openRouterKey, customPrompt) {
   const defaultPrompt = `You are a highly skilled software engineer reviewing a pull request. 
-Please analyze the following code changes and provide:
-1. Potential bugs or vulnerabilities
-2. Code improvement suggestions
-3. Performance implications
-4. Security concerns
-5. Best practices violations`;
+Analyze the following code changes and provide a detailed review in the following format:
+
+### Potential Issues
+[List any bugs, vulnerabilities, or critical issues]
+
+### Improvements Suggested
+[List specific code improvements and refactoring suggestions]
+
+### Performance
+[Discuss performance implications and optimization opportunities]
+
+### Security Concerns
+[List security issues, if any]
+
+### Best Practices
+[Suggest adherence to coding standards and best practices]
+
+### Overall score
+[Give a 1-5 star rating for this PR] and final comments
+
+Please be specific and provide actionable feedback.`;
 
   const prompt = customPrompt || defaultPrompt;
-  const fullPrompt = `${prompt}\n\nHere's the diff:\n${diff}\n\nPlease provide your analysis in a clear, structured format.`;
+  const fullPrompt = `${prompt}\n\nHere's the diff:\n${diff}\n\nProvide your analysis in the specified format.`;
 
   try {
     const response = await axios.post(
@@ -41670,24 +41690,37 @@ Please analyze the following code changes and provide:
       }
     );
 
+    if (!response.data?.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response format from OpenRouter API');
+    }
+
     return response.data.choices[0].message.content;
   } catch (error) {
-    throw new Error(`OpenRouter API error: ${error.message}`);
+    if (error.response?.data) {
+      throw new Error(
+        `OpenRouter API error: ${JSON.stringify(error.response.data)}`
+      );
+    }
+    throw new Error(`Failed to analyze diff: ${error.message}`);
   }
 }
 
 async function createPRComment(octokit, context, analysis) {
-  await octokit.rest.issues.createComment({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    issue_number: context.payload.pull_request.number,
-    body: `## OpenRouter AI Analysis
+  try {
+    await octokit.rest.issues.createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.payload.pull_request.number,
+      body: `## OpenRouter AI Analysis
 
 ${analysis}
 
 ---
 *Analyzed using ${core.getInput('model_id')}*`,
-  });
+    });
+  } catch (error) {
+    throw new Error(`Failed to create PR comment: ${error.message}`);
+  }
 }
 
 async function run() {
