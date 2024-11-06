@@ -41643,8 +41643,16 @@ async function getPRDiff(octokit, context) {
 }
 
 async function analyzeDiff(diff, modelId, openRouterKey, customPrompt) {
-  const defaultPrompt = `You are a highly skilled software engineer reviewing a pull request. 
-Analyze the following code changes and provide a detailed review in the following format:
+  const defaultPrompt = `You are a highly skilled staff software engineer reviewing a pull request. 
+
+Avoid generic BS advice. For each advice, please provide a file Path of the related change. No need to paste the code itself.
+
+Do not mention what's good on the code. Just focus on what's bad and how to improve.
+
+Analyze the following code changes and provide a detailed review in the following format. MAKE SURE TO ADHERE TO THIS FORMAT!
+
+### Overall score
+[Give a 1-5 star rating for this PR] and final comments
 
 ### Potential Issues
 [List any bugs, vulnerabilities, or critical issues]
@@ -41661,8 +41669,6 @@ Analyze the following code changes and provide a detailed review in the followin
 ### Best Practices
 [Suggest adherence to coding standards and best practices]
 
-### Overall score
-[Give a 1-5 star rating for this PR] and final comments
 
 Please be specific and provide actionable feedback.`;
 
@@ -41711,7 +41717,7 @@ async function createPRComment(octokit, context, analysis) {
       owner: context.repo.owner,
       repo: context.repo.repo,
       issue_number: context.payload.pull_request.number,
-      body: `## OpenRouter AI Analysis
+      body: `## DiffGuard AI Analysis
 
 ${analysis}
 
