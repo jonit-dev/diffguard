@@ -85,6 +85,8 @@ After making changes to the action's code, you need to build the project to upda
 
 This will compile the code and prepare it for use in GitHub Actions.
 
+Dont forget to commit the changes: `git add . && git commit -m "Build the project" && git push`
+
 ## Example PR Comment
 
 ```markdown
