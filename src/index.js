@@ -28,26 +28,31 @@ Do not mention what's good on the code. Just focus on what's bad and how to impr
 
 Analyze the following code changes and provide a detailed review in the following format. MAKE SURE TO ADHERE TO THIS FORMAT!
 
-### Overall score
+For each category below, except for the overall score, rate the issue in terms of severity (low, medium, high).
+
+Here's your text with added emojis:
+
+---
+
+### 🏆 Overall Score  
 [Give a 1-5 star rating for this PR] and final comments
 
-### Potential Issues
+### 🐞 Potential Issues  
 [List any bugs, vulnerabilities, or critical issues]
 
-### Improvements Suggested
+### 💡 Improvements Suggested  
 [List specific code improvements and refactoring suggestions]
 
-### Performance
+### ⚡️ Performance  
 [Discuss performance implications and optimization opportunities]
 
-### Security Concerns
+### 🔐 Security Concerns  
 [List security issues, if any]
 
-### Best Practices
-[Suggest adherence to coding standards and best practices]
+### 📏 Best Practices  
+[Suggest adherence to coding standards and best practices] 
 
-
-Please be specific and provide actionable feedback.`;
+Please be specific and provide actionable feedback. No generic BS advice.`;
 
   const prompt = customPrompt || defaultPrompt;
   const fullPrompt = `${prompt}\n\nHere's the diff:\n${diff}\n\nProvide your analysis in the specified format.`;

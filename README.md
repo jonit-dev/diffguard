@@ -14,73 +14,6 @@ AI-powered PR reviews using OpenRouter's language models. Get automated code rev
    - Best practices violations
    - Overall score and final comments
 
-## Quick Start
-
-Add this workflow to `.github/workflows/pr-review.yml`:
-
-```yaml
-name: PR Review
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-# Add these permissions to allow PR comments
-permissions:
-  contents: read
-  pull-requests: write
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: jonit-dev/openrouter-github-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
-```
-
-## Example PR Comment
-
-```markdown
-## DiffGuard AI Analysis
-
-### Potential Issues
-
-- The database query in `users.service.ts` isn't properly parameterized, creating a SQL injection risk
-- Async operation in `handleSubmit()` lacks error handling
-
-### Improvements Suggested
-
-- Consider using prepared statements for database queries
-- Add try/catch block around async operations
-- Extract form validation logic into a separate utility
-
-### Performance
-
-- The `heavyComputation()` function could benefit from memoization
-- Consider lazy loading for the imported analytics module
-
-### Security Concerns
-
-- API endpoint lacks input validation
-- Sensitive data exposure in error logs
-
-### Best Practices
-
-- Follow consistent naming convention for interface props
-- Add type annotations for function parameters
-- Consider breaking down large component into smaller ones
-
-### Overall score
-
-⭐⭐⭐⭐ (4/5) - Good PR with some minor improvements needed. The code is well-structured but could benefit from additional security measures and error handling.
-
----
-
-_Analyzed using anthropic/claude-2_
-```
-
 ## ⚠️ Security First: Managing Secrets
 
 This action requires an OpenRouter API key. **NEVER** commit API keys or sensitive data directly in your workflow files.
@@ -139,6 +72,58 @@ jobs:
             5. Best practices
 
             Provide a 1-5 star rating for the overall quality.
+```
+
+## Building the Project
+
+After making changes to the action's code, you need to build the project to update the action:
+
+1. Run the following command to install dependencies and build the action:
+   ```bash
+   npm install && npm run build
+   ```
+
+This will compile the code and prepare it for use in GitHub Actions.
+
+## Example PR Comment
+
+```markdown
+## OpenRouter AI Analysis
+
+### Potential Issues
+
+- The database query in `users.service.ts` isn't properly parameterized, creating a SQL injection risk
+- Async operation in `handleSubmit()` lacks error handling
+
+### Improvements Suggested
+
+- Consider using prepared statements for database queries
+- Add try/catch block around async operations
+- Extract form validation logic into a separate utility
+
+### Performance
+
+- The `heavyComputation()` function could benefit from memoization
+- Consider lazy loading for the imported analytics module
+
+### Security Concerns
+
+- API endpoint lacks input validation
+- Sensitive data exposure in error logs
+
+### Best Practices
+
+- Follow consistent naming convention for interface props
+- Add type annotations for function parameters
+- Consider breaking down large component into smaller ones
+
+### Overall score
+
+⭐⭐⭐⭐ (4/5) - Good PR with some minor improvements needed. The code is well-structured but could benefit from additional security measures and error handling.
+
+---
+
+_Analyzed using anthropic/claude-2_
 ```
 
 ## Configuration Reference
