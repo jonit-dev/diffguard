@@ -1,5 +1,7 @@
-name: 'OpenRouter PR Review Action'
-description: 'A GitHub Action to review PR diffs, suggest improvements, and scan for vulnerabilities using OpenRouter.'
+name: 'DiffGuard AI PR Review'
+description: 'Intelligent code review automation using AI to analyze PR diffs, suggest improvements, and scan for vulnerabilities'
+author: 'joao'
+
 inputs:
   github_token:
     description: 'GitHub token for API access'
@@ -22,9 +24,11 @@ inputs:
     description: 'Maximum number of tokens in the response'
     required: false
     default: '2048'
+
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
+
 branding:
-  icon: 'eye'
-  color: 'blue'
+  icon: 'shield'
+  color: 'purple'
