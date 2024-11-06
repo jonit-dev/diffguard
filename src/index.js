@@ -26,7 +26,10 @@ Avoid generic BS advice. For each advice, please provide a file Path of the rela
 
 Do not mention what's good on the code. Just focus on what's bad and how to improve.
 
-Analyze the following code changes and provide a detailed review in the following format:
+Analyze the following code changes and provide a detailed review in the following format. MAKE SURE TO ADHERE TO THIS FORMAT!
+
+### Overall score
+[Give a 1-5 star rating for this PR] and final comments
 
 ### Potential Issues
 [List any bugs, vulnerabilities, or critical issues]
@@ -43,8 +46,6 @@ Analyze the following code changes and provide a detailed review in the followin
 ### Best Practices
 [Suggest adherence to coding standards and best practices]
 
-### Overall score
-[Give a 1-5 star rating for this PR] and final comments
 
 Please be specific and provide actionable feedback.`;
 
