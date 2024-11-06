@@ -2,7 +2,7 @@ name: Test PR Review Action
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, labeled, unlabeled]
 
 # Add required permissions
 permissions:

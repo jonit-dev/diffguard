@@ -4,7 +4,7 @@ AI-powered PR reviews using OpenRouter's language models. Get automated code rev
 
 ## How It Works
 
-1. When a PR is opened or updated, the action automatically runs
+1. When a PR is opened, updated, or a label is added/removed, the action automatically runs
 2. It analyzes the PR's diff using your chosen AI model
 3. Posts a detailed analysis as a PR comment, including:
    - Potential bugs and vulnerabilities
@@ -38,7 +38,7 @@ Create `.github/workflows/pr-review.yml` in your project with all available opti
 name: PR Review
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, labeled, unlabeled]
 
 # Required permissions
 permissions:
