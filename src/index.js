@@ -20,7 +20,12 @@ async function getPRDiff(octokit, context) {
 }
 
 async function analyzeDiff(diff, modelId, openRouterKey, customPrompt) {
-  const defaultPrompt = `You are a highly skilled software engineer reviewing a pull request. 
+  const defaultPrompt = `You are a highly skilled staff software engineer reviewing a pull request. 
+
+Avoid generic BS advice. For each advice, please provide a file Path of the related change. No need to paste the code itself.
+
+Do not mention what's good on the code. Just focus on what's bad and how to improve.
+
 Analyze the following code changes and provide a detailed review in the following format:
 
 ### Potential Issues
