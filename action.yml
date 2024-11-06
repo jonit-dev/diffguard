@@ -12,6 +12,9 @@ inputs:
     description: 'The model ID to use for analysis (e.g., anthropic/claude-2, openai/gpt-4)'
     required: true
     default: 'anthropic/claude-2'
+  review_label:
+    description: 'Label that triggers the review. If not set, reviews all PRs.'
+    required: false
   custom_prompt:
     description: 'Custom prompt for the AI analysis. If not provided, a default prompt focusing on code review aspects will be used.'
     required: false

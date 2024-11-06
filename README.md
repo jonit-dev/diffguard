@@ -61,6 +61,7 @@ jobs:
           # Optional inputs with defaults
           model_id: 'anthropic/claude-2' # Default model
           max_tokens: '2048' # Default max tokens
+          review_label: 'ai-review' # Optional: Only review PRs with this label
 
           # Optional custom prompt
           custom_prompt: |
@@ -137,6 +138,7 @@ _Analyzed using anthropic/claude-2_
 | `model_id`        | Model ID to use             | No       | `anthropic/claude-2`       | See available models below               |
 | `custom_prompt`   | Custom prompt for analysis  | No       | Default code review prompt | Can be multiline YAML                    |
 | `max_tokens`      | Maximum tokens in response  | No       | `2048`                     | Adjust based on review complexity        |
+| `review_label`    | Label to trigger review     | No       | -                          | If not set, reviews all PRs              |
 
 ### Minimal Configuration
 
@@ -192,6 +194,16 @@ jobs:
       5. Best practices
 
       Rate the overall quality from 1-5 stars and provide final comments.
+```
+
+### Label-Based Review Example
+
+```yaml
+- uses: jonit-dev/openrouter-github-action@main
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
+    review_label: 'ai-review' # Only reviews PRs with this label
 ```
 
 ## Available Models

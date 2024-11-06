@@ -41642,6 +41642,24 @@ async function getPRDiff(octokit, context) {
   }
 }
 
+async function shouldReviewPR(octokit, context, requiredLabel) {
+  if (!requiredLabel) {
+    return true;
+  }
+
+  try {
+    const { data: labels } = await octokit.rest.issues.listLabelsOnIssue({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.payload.pull_request.number,
+    });
+
+    return labels.some((label) => label.name === requiredLabel);
+  } catch (error) {
+    throw new Error(`Failed to fetch PR labels: ${error.message}`);
+  }
+}
+
 async function analyzeDiff(diff, modelId, openRouterKey, customPrompt) {
   const defaultPrompt = `You are a highly skilled staff software engineer reviewing a pull request. 
 
@@ -41740,10 +41758,22 @@ async function run() {
     const openRouterKey = core.getInput('open_router_key', { required: true });
     const modelId = core.getInput('model_id', { required: true });
     const customPrompt = core.getInput('custom_prompt');
+    const reviewLabel = core.getInput('review_label');
 
     // Get GitHub token and create octokit client
     const token = core.getInput('github_token', { required: true });
     const octokit = github.getOctokit(token);
+
+    // Check if we should review this PR based on label
+    const shouldReview = await shouldReviewPR(
+      octokit,
+      github.context,
+      reviewLabel
+    );
+    if (!shouldReview) {
+      core.info('Skipping review - required label not found on PR');
+      return;
+    }
 
     // Get PR diff
     const diff = await getPRDiff(octokit, github.context);
