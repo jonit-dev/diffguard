@@ -14,10 +14,36 @@ AI-powered PR reviews using OpenRouter's language models. Get automated code rev
    - Best practices violations
    - Overall score and final comments
 
-Example PR comment:
+## Quick Start
+
+Add this workflow to `.github/workflows/pr-review.yml`:
+
+```yaml
+name: PR Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+# Add these permissions to allow PR comments
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: jonit-dev/openrouter-github-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          open_router_key: ${{ secrets.OPEN_ROUTER_KEY }}
+```
+
+## Example PR Comment
 
 ```markdown
-## OpenRouter AI Analysis
+## DiffGuard AI Analysis
 
 ### Potential Issues
 
@@ -81,6 +107,11 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+# Required permissions
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   review:
     runs-on: ubuntu-latest
@@ -129,6 +160,11 @@ name: PR Review
 on:
   pull_request:
     types: [opened, synchronize]
+
+# Required permissions
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   review:
@@ -189,6 +225,20 @@ Recommended models:
    - Never include it in environment files
    - Always use GitHub Secrets
 7. The action will run automatically on your PR and post its analysis as a comment
+
+## Troubleshooting
+
+### Permission Errors
+
+If you see `Error: Resource not accessible by integration`, add these permissions to your workflow:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+```
+
+This allows the action to read PR contents and create comments.
 
 ## Security Best Practices
 

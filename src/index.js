@@ -88,7 +88,7 @@ async function createPRComment(octokit, context, analysis) {
       owner: context.repo.owner,
       repo: context.repo.repo,
       issue_number: context.payload.pull_request.number,
-      body: `## OpenRouter AI Analysis
+      body: `## DiffGuard AI Analysis
 
 ${analysis}
 
