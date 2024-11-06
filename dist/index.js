@@ -41651,14 +41651,14 @@ Do not mention what's good on the code. Just focus on what's bad and how to impr
 
 Analyze the following code changes and provide a detailed review in the following format. MAKE SURE TO ADHERE TO THIS FORMAT!
 
-For each category below, except for the overall score, rate the issue in terms of severity (low, medium, high).
+For each category below, except for the overall score, rate the issue in terms of severity (low 🔵, medium 🟡, high 🔥).
 
 Here's your text with added emojis:
 
 ---
 
 ### 🏆 Overall Score  
-[Give a 1-5 star rating for this PR] and final comments
+[Give a 1-5 ⭐ rating for this PR] and final comments
 
 ### 🐞 Potential Issues  
 [List any bugs, vulnerabilities, or critical issues]
