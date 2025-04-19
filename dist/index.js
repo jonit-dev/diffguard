@@ -41752,6 +41752,61 @@ ${analysis}
   }
 }
 
+/**
+ * Filters out excluded files from the diff
+ * @param {string} diff - The PR diff content
+ * @param {string[]} excludePatterns - Array of file patterns to exclude
+ * @returns {string} Filtered diff content
+ */
+function filterExcludedFiles(diff, excludePatterns) {
+  if (!excludePatterns || excludePatterns.length === 0) {
+    return diff;
+  }
+
+  // Split the diff into file sections
+  const fileSections = diff.split('diff --git');
+
+  // Keep the first empty section (if any) and filter the rest
+  const filteredSections = [fileSections[0]];
+
+  for (let i = 1; i < fileSections.length; i++) {
+    const section = fileSections[i];
+
+    // Extract the file path from the diff section
+    const filePathMatch = section.match(/a\/([^\s]+)/);
+    if (!filePathMatch) continue;
+
+    const filePath = filePathMatch[1];
+
+    // Check if this file should be excluded
+    const shouldExclude = excludePatterns.some((pattern) => {
+      // Convert glob pattern to regex
+      const regexPattern = pattern
+        .replace(/\./g, '\\.')
+        .replace(/\*/g, '.*')
+        .replace(/\?/g, '.');
+
+      const regex = new RegExp(`^${regexPattern}$`);
+      return regex.test(filePath);
+    });
+
+    if (!shouldExclude) {
+      filteredSections.push(section);
+    } else {
+      core.info(`Excluding file from analysis: ${filePath}`);
+    }
+  }
+
+  // Reconstruct the diff, adding 'diff --git' back except for the first section
+  return (
+    filteredSections[0] +
+    filteredSections
+      .slice(1)
+      .map((section) => `diff --git${section}`)
+      .join('')
+  );
+}
+
 async function run() {
   try {
     // Get inputs
@@ -41759,6 +41814,12 @@ async function run() {
     const modelId = core.getInput('model_id', { required: true });
     const customPrompt = core.getInput('custom_prompt');
     const reviewLabel = core.getInput('review_label');
+    const excludeFilesInput = core.getInput('exclude_files');
+
+    // Process exclude patterns
+    const excludePatterns = excludeFilesInput
+      ? excludeFilesInput.split(',').map((pattern) => pattern.trim())
+      : [];
 
     // Get GitHub token and create octokit client
     const token = core.getInput('github_token', { required: true });
@@ -41776,7 +41837,15 @@ async function run() {
     }
 
     // Get PR diff
-    const diff = await getPRDiff(octokit, github.context);
+    let diff = await getPRDiff(octokit, github.context);
+
+    // Filter excluded files
+    if (excludePatterns.length > 0) {
+      core.info(
+        `Excluding files matching patterns: ${excludePatterns.join(', ')}`
+      );
+      diff = filterExcludedFiles(diff, excludePatterns);
+    }
 
     // Analyze the diff
     const analysis = await analyzeDiff(
