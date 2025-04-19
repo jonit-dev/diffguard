@@ -18,9 +18,9 @@ inputs:
     description: 'Label that triggers the review. If not set, reviews all PRs.'
     required: false
   exclude_files:
-    description: 'Files or patterns to exclude from analysis (e.g., yarn.lock, package-lock.json, *.lock, dist/**). Comma-separated list.'
+    description: 'Files or patterns to exclude from analysis (e.g., "yarn.lock", "package-lock.json", "*.lock", "dist/**"). Supports filename and simple glob patterns.'
     required: false
-    default: 'yarn.lock,package-lock.json,package.lock'
+    default: 'yarn.lock,package-lock.json,package.lock,pnpm-lock.yaml,*.lock'
   custom_prompt:
     description: 'Custom prompt for the AI analysis. If not provided, a default prompt focusing on code review aspects will be used.'
     required: false
