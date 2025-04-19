@@ -41693,6 +41693,9 @@ Here's your text with added emojis:
 ### 📏 Best Practices  
 [Suggest adherence to coding standards and best practices] 
 
+### 🧪 Missing Tests  
+[List any missing or insufficient tests, and suggest specific tests that should be added. Be concrete and actionable.]
+
 Please be specific and provide actionable feedback. No generic BS advice.`;
 
   const prompt = customPrompt || defaultPrompt;
@@ -41905,6 +41908,23 @@ function filterExcludedFiles(diff, excludePatterns) {
   return filteredDiff;
 }
 
+// Add a function to extract the score from the AI's analysis
+function extractScore(analysis) {
+  // Try to find a 0-100 score (e.g., "Score: 72" or "Overall Score: 72")
+  const hundredMatch = analysis.match(/Score.*?([0-9]{1,3})/i);
+  if (hundredMatch) {
+    const score = parseInt(hundredMatch[1], 10);
+    if (!isNaN(score)) return score;
+  }
+  // Try to find a 1-5 star rating (e.g., "[3.5/5 ⭐]")
+  const starMatch = analysis.match(/\[([0-9.]+)\/5 ?⭐/i);
+  if (starMatch) {
+    const stars = parseFloat(starMatch[1]);
+    if (!isNaN(stars)) return Math.round((stars / 5) * 100);
+  }
+  return null; // Could not extract score
+}
+
 async function run() {
   try {
     // Get inputs
@@ -41985,9 +42005,28 @@ async function run() {
       customPrompt
     );
 
-    core.info(`Analysis complete, posting comment to PR`);
-    // Post the analysis as a PR comment
-    await createPRComment(octokit, github.context, analysis);
+    // Get minimum_score input (default 75)
+    const minimumScore = parseInt(core.getInput('minimum_score') || '75', 10);
+
+    // Extract score and block PR if below minimum
+    const score = extractScore(analysis);
+    let warningMsg = '';
+    if (score !== null) {
+      core.info(
+        `AI review score: ${score} (minimum required: ${minimumScore})`
+      );
+      if (score < minimumScore) {
+        warningMsg = `> ⚠️ **PR Blocked:** The AI review score for this PR is **${score}**, which is below the required minimum of **${minimumScore}**. Please address the issues below before merging.\n\n`;
+        core.setFailed(
+          `PR blocked: AI review score (${score}) is below the minimum required (${minimumScore}).`
+        );
+      }
+    } else {
+      core.warning('Could not extract score from AI analysis.');
+    }
+
+    // Post the analysis as a PR comment, with warning if needed
+    await createPRComment(octokit, github.context, warningMsg + analysis);
     core.info(`PR comment posted successfully`);
   } catch (error) {
     core.error(`Error details: ${JSON.stringify(error)}`);

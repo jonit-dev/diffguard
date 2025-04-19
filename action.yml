@@ -256,6 +256,10 @@ inputs:
     description: 'Maximum number of tokens in the response'
     required: false
     default: '4096'
+  minimum_score:
+    description: 'Minimum AI review score (0-100) required to pass the check and allow merging. PRs with a lower score will be blocked. Default: 75.'
+    required: false
+    default: '75'
 
 runs:
   using: 'node20'
