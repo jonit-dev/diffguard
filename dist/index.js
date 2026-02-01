@@ -41660,7 +41660,7 @@ async function shouldReviewPR(octokit, context, requiredLabel) {
   }
 }
 
-async function analyzeDiff(diff, modelId, openRouterKey, customPrompt) {
+async function analyzeDiff(diff, modelId, openRouterKey, customPrompt, reasoningEffort) {
   const defaultPrompt = `You are a highly skilled staff software engineer reviewing a pull request. 
 
 Avoid generic BS advice. For each advice, please provide a file Path of the related change. No need to paste the code itself.
@@ -41702,17 +41702,24 @@ Please be specific and provide actionable feedback. No generic BS advice.`;
   const fullPrompt = `${prompt}\n\nHere's the diff:\n${diff}\n\nProvide your analysis in the specified format.`;
 
   try {
+    const requestBody = {
+      model: modelId,
+      messages: [
+        {
+          role: 'user',
+          content: fullPrompt,
+        },
+      ],
+    };
+
+    // Add reasoning_effort if specified (for reasoning models)
+    if (reasoningEffort) {
+      requestBody.reasoning_effort = reasoningEffort;
+    }
+
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
-      {
-        model: modelId,
-        messages: [
-          {
-            role: 'user',
-            content: fullPrompt,
-          },
-        ],
-      },
+      requestBody,
       {
         headers: {
           Authorization: `Bearer ${openRouterKey}`,
@@ -41933,6 +41940,7 @@ async function run() {
     const customPrompt = core.getInput('custom_prompt');
     const reviewLabel = core.getInput('review_label');
     const excludeFilesInput = core.getInput('exclude_files');
+    const reasoningEffort = core.getInput('reasoning_effort');
 
     // Process exclude patterns
     const excludePatterns = excludeFilesInput
@@ -41997,12 +42005,16 @@ async function run() {
     }
 
     core.info(`Sending diff to OpenRouter API for analysis...`);
+    if (reasoningEffort) {
+      core.info(`Using reasoning effort: ${reasoningEffort}`);
+    }
     // Analyze the diff
     const analysis = await analyzeDiff(
       diff,
       modelId,
       openRouterKey,
-      customPrompt
+      customPrompt,
+      reasoningEffort
     );
 
     // Get minimum_score input (default 75)

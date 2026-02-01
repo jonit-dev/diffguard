@@ -256,6 +256,9 @@ inputs:
     description: 'Maximum number of tokens in the response'
     required: false
     default: '4096'
+  reasoning_effort:
+    description: 'Reasoning effort level for reasoning models. Supported values: low, medium, high, xhigh (OpenRouter docs: https://openrouter.ai/docs/use-cases/reasoning-tokens#reasoning-effort-level)'
+    required: false
   minimum_score:
     description: 'Minimum AI review score (0-100) required to pass the check and allow merging. PRs with a lower score will be blocked. Default: 75.'
     required: false
