@@ -37,6 +37,106 @@ async function shouldReviewPR(octokit, context, requiredLabel) {
   }
 }
 
+/**
+ * Checks if the PR review should be skipped based on existing review count
+ * @param {object} octokit - Octokit client
+ * @param {object} context - GitHub context
+ * @param {number} maxReviews - Maximum allowed reviews
+ * @returns {Promise<{shouldSkip: boolean, currentCount: number, message: string}>}
+ */
+async function checkReviewCount(octokit, context, maxReviews) {
+  try {
+    const { data: comments } = await octokit.rest.issues.listComments({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.payload.pull_request.number,
+    });
+
+    // Count DiffGuard comments (by bot or containing our marker)
+    const diffGuardComments = comments.filter(comment => {
+      // Check if comment is from a bot or contains our analysis header
+      const isBotComment = comment.user?.type === 'Bot' || comment.user?.login === 'diffguard[bot]';
+      const hasAnalysisMarker = comment.body?.includes('## DiffGuard AI Analysis');
+      return isBotComment || hasAnalysisMarker;
+    });
+
+    const currentCount = diffGuardComments.length;
+
+    core.info(`Current DiffGuard review count: ${currentCount} (max: ${maxReviews})`);
+
+    if (currentCount >= maxReviews) {
+      return {
+        shouldSkip: true,
+        currentCount,
+        message: `Maximum review limit reached (${maxReviews}). Skipping review to save credits.`
+      };
+    }
+
+    return { shouldSkip: false, currentCount, message: '' };
+  } catch (error) {
+    core.warning(`Failed to check review count: ${error.message}. Proceeding with review.`);
+    return { shouldSkip: false, currentCount: 0, message: '' };
+  }
+}
+
+/**
+ * Checks if the PR review should be skipped based on cooldown period
+ * @param {object} octokit - Octokit client
+ * @param {object} context - GitHub context
+ * @param {number} cooldownMinutes - Cooldown period in minutes
+ * @returns {Promise<{shouldSkip: boolean, lastReviewTime: Date | null, message: string}>}
+ */
+async function checkCooldown(octokit, context, cooldownMinutes) {
+  if (cooldownMinutes <= 0) {
+    return { shouldSkip: false, lastReviewTime: null, message: '' };
+  }
+
+  try {
+    const { data: comments } = await octokit.rest.issues.listComments({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.payload.pull_request.number,
+      per_page: 10, // Only need recent comments
+      sort: 'created',
+      direction: 'desc'
+    });
+
+    // Find most recent DiffGuard comment
+    const latestComment = comments.find(comment => {
+      const isBotComment = comment.user?.type === 'Bot' || comment.user?.login === 'diffguard[bot]';
+      const hasAnalysisMarker = comment.body?.includes('## DiffGuard AI Analysis');
+      return isBotComment || hasAnalysisMarker;
+    });
+
+    if (!latestComment) {
+      core.info('No previous DiffGuard reviews found. Cooldown not applicable.');
+      return { shouldSkip: false, lastReviewTime: null, message: '' };
+    }
+
+    const lastReviewTime = new Date(latestComment.created_at);
+    const now = new Date();
+    const timeSinceLastReview = now - lastReviewTime;
+    const cooldownMs = cooldownMinutes * 60 * 1000;
+
+    core.info(`Last review was at ${lastReviewTime.toISOString()} (${Math.round(timeSinceLastReview / 1000)}s ago)`);
+    core.info(`Cooldown period: ${cooldownMinutes}m (${cooldownMs}ms)`);
+
+    if (timeSinceLastReview < cooldownMs) {
+      const remainingMinutes = Math.ceil((cooldownMs - timeSinceLastReview) / (60 * 1000));
+      return {
+        shouldSkip: true,
+        lastReviewTime,
+        message: `Cooldown active. Last review was ${Math.round(timeSinceLastReview / 1000)}s ago. Please wait ${remainingMinutes} more minutes.`
+      };
+    }
+
+    return { shouldSkip: false, lastReviewTime, message: '' };
+  } catch (error) {
+    core.warning(`Failed to check cooldown: ${error.message}. Proceeding with review.`);
+    return { shouldSkip: false, lastReviewTime: null, message: '' };
+  }
+}
+
 async function analyzeDiff(diff, modelId, openRouterKey, customPrompt, reasoningEffort) {
   const defaultPrompt = `You are a highly skilled staff software engineer reviewing a pull request. 
 
@@ -318,6 +418,8 @@ async function run() {
     const reviewLabel = core.getInput('review_label');
     const excludeFilesInput = core.getInput('exclude_files');
     const reasoningEffort = core.getInput('reasoning_effort');
+    const maxPrReviews = parseInt(core.getInput('max_pr_reviews') || '10', 10);
+    const cooldownPeriod = parseInt(core.getInput('cooldown_period') || '0', 10);
 
     // Process exclude patterns
     const excludePatterns = excludeFilesInput
@@ -332,6 +434,8 @@ async function run() {
         excludePatterns
       )}`
     );
+    core.info(`Max PR Reviews: ${maxPrReviews}`);
+    core.info(`Cooldown Period: ${cooldownPeriod} minutes`);
 
     // Get GitHub token and create octokit client
     const token = core.getInput('github_token', { required: true });
@@ -345,6 +449,20 @@ async function run() {
     );
     if (!shouldReview) {
       core.info('Skipping review - required label not found on PR');
+      return;
+    }
+
+    // Check review count limit
+    const reviewCountCheck = await checkReviewCount(octokit, github.context, maxPrReviews);
+    if (reviewCountCheck.shouldSkip) {
+      core.info(`Skipping review: ${reviewCountCheck.message}`);
+      return;
+    }
+
+    // Check cooldown period
+    const cooldownCheck = await checkCooldown(octokit, github.context, cooldownPeriod);
+    if (cooldownCheck.shouldSkip) {
+      core.info(`Skipping review: ${cooldownCheck.message}`);
       return;
     }
 
